@@ -2,12 +2,12 @@ package com.example.spring_notes_api.controller;
 
 import com.example.spring_notes_api.model.*;
 import com.example.spring_notes_api.service.CategoryService;
+import com.example.spring_notes_api.utils.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,14 +27,7 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<Response<Category>> create(@Valid @RequestBody CategoryRequest request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-            String validationErrors = fieldErrors.getFirst().getDefaultMessage();
-
-            if (fieldErrors.size() > 1) {
-                for (int i = 1; i < fieldErrors.size(); i++) {
-                    validationErrors += ", " + fieldErrors.get(i).getDefaultMessage();
-                }
-            }
+            String validationErrors = Utils.getValidationErrorMessages(bindingResult);
 
             return new ResponseEntity<>(new Response<>(validationErrors, null), HttpStatus.BAD_REQUEST);
         }

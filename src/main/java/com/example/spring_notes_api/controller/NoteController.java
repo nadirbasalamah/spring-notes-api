@@ -4,12 +4,12 @@ import com.example.spring_notes_api.model.Note;
 import com.example.spring_notes_api.model.NoteRequest;
 import com.example.spring_notes_api.model.Response;
 import com.example.spring_notes_api.service.NoteService;
+import com.example.spring_notes_api.utils.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,14 +40,7 @@ public class NoteController {
     @PostMapping
     public ResponseEntity<Response<Note>> create(@Valid @RequestBody NoteRequest request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            List<FieldError> fieldErrors = bindingResult.getFieldErrors();
-            String validationErrors = fieldErrors.getFirst().getDefaultMessage();
-
-            if (fieldErrors.size() > 1) {
-                for (int i = 1; i < fieldErrors.size(); i++) {
-                    validationErrors += ", " + fieldErrors.get(i).getDefaultMessage();
-                }
-            }
+            String validationErrors = Utils.getValidationErrorMessages(bindingResult);
 
             return new ResponseEntity<>(new Response<>(validationErrors, null), HttpStatus.BAD_REQUEST);
         }
@@ -60,7 +53,9 @@ public class NoteController {
     @PutMapping("/{id}")
     public ResponseEntity<Response<Note>> update(@PathVariable("id") Integer id, @Valid @RequestBody NoteRequest request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return new ResponseEntity<>(new Response<>(bindingResult.getFieldErrors().toString(), null), HttpStatus.BAD_REQUEST);
+            String validationErrors = Utils.getValidationErrorMessages(bindingResult);
+
+            return new ResponseEntity<>(new Response<>(validationErrors, null), HttpStatus.BAD_REQUEST);
         }
 
         Response<Note> response = service.update(request, id);
