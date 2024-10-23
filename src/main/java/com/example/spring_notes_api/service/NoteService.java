@@ -1,8 +1,10 @@
 package com.example.spring_notes_api.service;
 
+import com.example.spring_notes_api.model.Category;
 import com.example.spring_notes_api.model.Note;
 import com.example.spring_notes_api.model.NoteRequest;
 import com.example.spring_notes_api.model.Response;
+import com.example.spring_notes_api.repository.CategoryRepository;
 import com.example.spring_notes_api.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,10 +15,11 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class NoteService {
-    private final NoteRepository repository;
+    private final NoteRepository noteRepository;
+    private final CategoryRepository categoryRepository;
 
     public Response<List<Note>> getAll() {
-        List<Note> notes = repository.findAll();
+        List<Note> notes = noteRepository.findAll();
 
         return new Response<>(
                 "all notes",
@@ -25,7 +28,7 @@ public class NoteService {
     }
 
     public Response<Note> getById(Integer id) {
-        Optional<Note> noteData = repository.findById(id);
+        Optional<Note> noteData = noteRepository.findById(id);
 
         return noteData.map(note -> new Response<>(
                 "note found",
@@ -37,12 +40,22 @@ public class NoteService {
     }
 
     public Response<Note> create(NoteRequest request) {
+        Optional<Category> categoryData = categoryRepository.findById(request.getCategoryId());
+
+        if (categoryData.isEmpty()) {
+            return new Response<>(
+                    "create note failed, category not found",
+                    null
+            );
+        }
+
         Note noteData = Note.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .category(categoryData.get())
                 .build();
 
-        Note note = repository.save(noteData);
+        Note note = noteRepository.save(noteData);
 
         return new Response<>(
                 "note created",
@@ -51,7 +64,16 @@ public class NoteService {
     }
 
     public Response<Note> update(NoteRequest request, Integer id) {
-        Optional<Note> noteData = repository.findById(id);
+        Optional<Category> categoryData = categoryRepository.findById(request.getCategoryId());
+
+        if (categoryData.isEmpty()) {
+            return new Response<>(
+                    "update note failed, category not found",
+                    null
+            );
+        }
+
+        Optional<Note> noteData = noteRepository.findById(id);
 
         if (noteData.isEmpty()) {
             return new Response<>(
@@ -64,8 +86,9 @@ public class NoteService {
 
         updatedNote.setTitle(request.getTitle());
         updatedNote.setDescription(request.getDescription());
+        updatedNote.setCategory(categoryData.get());
 
-        Note note = repository.save(updatedNote);
+        Note note = noteRepository.save(updatedNote);
 
         return new Response<>(
                 "note updated",
@@ -74,15 +97,14 @@ public class NoteService {
     }
 
     public boolean delete(Integer id) {
-        Optional<Note> noteData = repository.findById(id);
+        Optional<Note> noteData = noteRepository.findById(id);
 
         if (noteData.isEmpty()) {
             return false;
         }
 
-        repository.delete(noteData.get());
+        noteRepository.delete(noteData.get());
 
         return true;
     }
-
 }

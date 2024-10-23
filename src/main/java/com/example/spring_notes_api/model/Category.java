@@ -10,16 +10,11 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @Entity
-@Table(name = "notes")
-public class Note {
+@Table(name = "categories")
+public class Category {
     @Id
     @GeneratedValue
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name="category_id", nullable=false)
-    private Category category;
-
-    private String title;
-    private String description;
+    private String name;
 }
